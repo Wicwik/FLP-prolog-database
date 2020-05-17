@@ -19,8 +19,19 @@ menu:-
     writeln('9 - Ukoncit program'),
     nl.
 
+findmenu:-
+    nl,
+    writeln('Moznosti vyhladania:'),
+    writeln('1 - ID'),
+    writeln('2 - Nazov knihy'),
+    writeln('3 - Meno autora'),
+    writeln('4 - Klucovych slov'),
+    writeln('9 - Spat na menu'),
+    nl.
+
 execute(49):- addbook(), !.
 execute(50):- removebook(), !.
+execute(51):- findbook(), !.
 execute(57):- !.
 
 addbook():-
@@ -62,7 +73,8 @@ read_from_file(F):-
     (
         Term = end_of_file,
         !,
-        seen;
+        seen
+        ;
         assertz(Term),
         fail
     ).
@@ -76,3 +88,77 @@ write_to_file(F):-
     fail.
 
 write_to_file(_):-told.
+
+
+findbook():-
+    repeat,
+    findmenu,
+    get(I),
+    exc_filter(I),
+    I == 57,
+    writeln('Navrat do menu').
+
+exc_filter(49):- filter(49), !.
+exc_filter(50):- filter(50), !.
+exc_filter(51):- filter(51), !.
+exc_filter(57):- !.
+
+filter(49):-
+    writeln('Zadaj ID:'),
+    read(Id),
+    findall([Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN], book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN), List),
+    writeln('-------------'),
+    print_books(List),
+    fail.
+
+filter(50):-
+    writeln('Zadaj nazov knihy:'),
+    read(Name),
+    writeln(book(_,Name,_,_,_,_,_,_)),
+    fail.
+
+filter(51):-
+    writeln('Zadaj meno autora:'),
+    read(Author),
+    writeln(book(_,_,Author,_,_,_,_,_)),
+    fail.
+
+auto_increment():-
+    findall(Id, book(Id,_,_,_,_,_,_,_), List),
+    writeln(List).
+
+print_list([]).
+print_list([X|Y]):-
+    write(X),
+    write(' '),
+    print_list(Y).
+
+print_books([]).
+print_books([H|T]):-
+    nth0(0, H, Id),
+    write('ID knihy: '), writeln(Id),
+
+    nth0(1, H, Name),
+    write('Nazov knihy: '), writeln(Name),
+
+    nth0(2, H, Author),
+    write('Autor knihy: '), writeln(Author),
+
+    nth0(3, H, Publisher),
+    write('Vydavatelstvo '), writeln(Publisher),
+
+    nth0(4, H, PublishDate),
+    write('Datum vydania: '), writeln(PublishDate),
+
+    nth0(5, H, KeyWords),
+    write('Klucove slova: '), print_list(KeyWords), nl,
+
+    nth0(6, H, Pages),
+    write('Pocet stran: '), writeln(Pages),
+
+    nth0(7, H, ISBN),
+    write('ISBN: '), writeln(ISBN),
+
+    nl,
+
+    print_books(T).
