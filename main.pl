@@ -50,31 +50,32 @@ execute(54):- write_to_file('db'), !.
 execute(48):- !.
 
 addbook():-
-    writeln('Identifikacne cislo:'),
-    read(Id),
+    auto_increment(Id),
     writeln('Nazov knihy: '),
-    read(Name),
+    read_atom(_),
+    read_atom(Name),
     writeln('Meno autora: '),
-    read(Author),
+    read_atom(Author),
     writeln('Vydavatelstvo: '),
-    read(Publisher),
+    read_atom(Publisher),
     writeln('Datum vydania (MM-RR): '),
-    read(PublishDate),
-    writeln('Zoznam klucovych slov: '),
-    read_string(KeyWords),
+    read_atom(PublishDate),
+    writeln('Klucove slova (oddelene ciarkov alebo medzerov):'),
+    atom_list_input(KeyWords),
     writeln('Pocet stran: '),
-    read(Pages),
+    read_number(Pages),
     writeln('ISBN: '),
-    read(ISBN),
+    read_atom(ISBN),
 
     assertz(book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN)),
     write_to_file('db').
 
 removebook():-
     writeln('Identifikacne cislo:'),
-    read(Id),
+    read_atom(_),
+    read_number(Id),
     writeln('ISBN: '),
-    read(ISBN),
+    read_atom(ISBN),
     retract(book(Id,_,_,_,_,_,_,ISBN)),
 
     write_to_file('db').
@@ -103,56 +104,50 @@ write_to_file(F):-
 
 write_to_file(_):-told.
 
+check_members([H|T], L):-
+    not(member(H, L)), !,
+    check_members(T, L).
+
+check_members([H|_], L):-
+    member(H, L), !.
+
+check_keywords([], [_|_], []).
+
+check_keywords([H|T], I, [H|T1]):-
+    nth0(5, H, K),
+    writeln(K),
+    check_members(I, K), !,
+    check_keywords(T, I, T1).
+
+check_keywords([_|T], I, T):-
+    check_keywords(T, I, T).
 
 findbook():-
-    repeat,
-    findmenu,
-    get(I),
-    exc_filter(I),
-    I == 48,
-    writeln('Navrat do menu').
-
-exc_filter(49):- filter(49), !.
-exc_filter(50):- filter(50), !.
-exc_filter(51):- filter(51), !.
-exc_filter(52):- filter(52), !.
-exc_filter(48):- !.
-
-filter(49):-
-    writeln('Zadaj ID:'),
-    read(Id),
-    findall([Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN], book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN), List),
-    writeln('-------------'),
-    print_books(List),
-    fail.
-
-filter(50):-
-    writeln('Zadaj nazov knihy:'),
-    read(Name),
-    findall([Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN], book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN), List),
-    writeln('-------------'),
-    print_books(List),
-    fail.
-
-filter(51):-
-    writeln('Zadaj meno autora:'),
-    read(Author),
-    findall([Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN], book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN), List),
-    writeln('-------------'),
-    print_books(List),
-    fail.
-
-filter(52):-
-    writeln('Zadaj klucove slova(oddelene ciarkov):'),
+    writeln('Nazov knihy: '),
+    read_atom(_),
+    read_atom(Name),
+    writeln('Meno autora: '),
+    read_atom(Author),
+    writeln('Vydavatelstvo: '),
+    read_atom(Publisher),
+    writeln('Datum vydania (MM-RR): '),
+    read_atom(PublishDate),
+    writeln('Klucove slova (oddelene ciarkov alebo medzerov):'),
     atom_list_input(KeyWords),
-    findall([Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN], book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN), List),
-    writeln('-------------'),
-    print_books(List),
-    fail.
+    writeln('Pocet stran: '),
+    read_number(Pages),
+    writeln('ISBN: '),
+    read_atom(ISBN),
 
-auto_increment():-
+    findall([Id, Name, Author, Publisher, PublishDate, KW, Pages, ISBN], book(Id, Name, Author, Publisher, PublishDate, KW, Pages, ISBN), List),
+    writeln('-------------'),
+    check_keywords(List, KeyWords, NewList),
+    print_books(NewList).
+
+auto_increment(NewId):-
     findall(Id, book(Id,_,_,_,_,_,_,_), List),
-    writeln(List).
+    max_list(List, MaxId),
+    NewId is MaxId + 1.
 
 print_list([]).
 print_list([X|Y]):-
@@ -192,17 +187,26 @@ print_books([H|T]):-
 
 atom_list_input(L):-
     current_input(In),
-    flush_output(),
     read_line_to_codes(In, Input),
+    not(is_empty(Input)), !,
     string_to_atom(Input, A),
     atomic_list_concat(P, ',', A),
     atomic_list_concat(P, '', S),
     atomic_list_concat(L, ' ', S).
 
-read_string(String):-
+read_atom(Atom):-
     current_input(Input),
     read_line_to_codes(Input,Codes),
-    string_codes(String,Codes).
+    not(is_empty(Codes)),
+    string_to_atom(Codes,Atom).
+
+is_empty([]).
+
+read_number(Number):-
+    current_input(Input),
+    read_line_to_codes(Input,Codes),
+    not(is_empty(Codes)),
+    number_codes(Number,Codes).
 
 sortbooks():-
     repeat,
