@@ -1,4 +1,4 @@
-:- dynamic book/8.
+:- dynamic book/9.
 
 main:-
     writeln('Vitajte v databaze knih'),
@@ -18,17 +18,8 @@ menu:-
     writeln('4 - Zoradit knihy'),
     writeln('5 - Nacitaj zo suboru'),
     writeln('6 - Uloz do suboru'),
+    writeln('7 - Zoskupit podla zanrov'),
     writeln('0 - Ukoncit program'),
-    nl.
-
-findmenu:-
-    nl,
-    writeln('Moznosti vyhladania:'),
-    writeln('1 - ID'),
-    writeln('2 - Nazov knihy'),
-    writeln('3 - Meno autora'),
-    writeln('4 - Klucove slova'),
-    writeln('0 - Spat na menu'),
     nl.
 
 sortmenu():-
@@ -47,6 +38,7 @@ execute(51):- findbook(), !.
 execute(52):- sortbooks(), !.
 execute(53):- read_from_file('db'), !.
 execute(54):- write_to_file('db'), !.
+execute(55):- group_by_genre(), !.
 execute(48):- !.
 
 addbook():-
@@ -66,8 +58,10 @@ addbook():-
     read_number(Pages),
     writeln('ISBN: '),
     read_atom(ISBN),
+    writeln('Zaner: '),
+    read_atom(Genre),
 
-    assertz(book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN)),
+    assertz(book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN, Genre)),
     write_to_file('db').
 
 removebook():-
@@ -76,12 +70,12 @@ removebook():-
     read_number(Id),
     writeln('ISBN: '),
     read_atom(ISBN),
-    retract(book(Id,_,_,_,_,_,_,ISBN)),
+    retract(book(Id,_,_,_,_,_,_,ISBN,_)),
 
     write_to_file('db').
 
 read_from_file(F):-
-    retractall(book(_,_,_,_,_,_,_,_)),
+    retractall(book(_,_,_,_,_,_,_,_,_)),
     see(F),
     repeat,
     read(Term), 
@@ -96,8 +90,8 @@ read_from_file(F):-
 
 write_to_file(F):-
     tell(F),
-    book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN),
-    writeq(book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN)),
+    book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN, Genre),
+    writeq(book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN, Genre)),
     write('.'),
     nl,
     fail.
@@ -115,7 +109,6 @@ check_keywords([], [_|_], []).
 
 check_keywords([H|T], I, [H|T1]):-
     nth0(5, H, K),
-    writeln(K),
     check_members(I, K), !,
     check_keywords(T, I, T1).
 
@@ -138,14 +131,16 @@ findbook():-
     read_number(Pages),
     writeln('ISBN: '),
     read_atom(ISBN),
+    writeln('Zaner: '),
+    read_atom(Genre),
 
-    findall([Id, Name, Author, Publisher, PublishDate, KW, Pages, ISBN], book(Id, Name, Author, Publisher, PublishDate, KW, Pages, ISBN), List),
+    findall([Id, Name, Author, Publisher, PublishDate, KW, Pages, ISBN, Genre], book(Id, Name, Author, Publisher, PublishDate, KW, Pages, ISBN, Genre), List),
     writeln('-------------'),
     check_keywords(List, KeyWords, NewList),
     print_books(NewList).
 
 auto_increment(NewId):-
-    findall(Id, book(Id,_,_,_,_,_,_,_), List),
+    findall(Id, book(Id,_,_,_,_,_,_,_,_), List),
     max_list(List, MaxId),
     NewId is MaxId + 1.
 
@@ -181,9 +176,14 @@ print_books([H|T]):-
     nth0(7, H, ISBN),
     write('ISBN: '), writeln(ISBN),
 
+    nth0(8, H, Genre),
+    write('Zaner: '), writeln(Genre),
+
     nl,
 
     print_books(T).
+
+is_empty([]).
 
 atom_list_input(L):-
     current_input(In),
@@ -194,19 +194,23 @@ atom_list_input(L):-
     atomic_list_concat(P, '', S),
     atomic_list_concat(L, ' ', S).
 
+atom_list_input(_).
+
 read_atom(Atom):-
     current_input(Input),
     read_line_to_codes(Input,Codes),
-    not(is_empty(Codes)),
+    not(is_empty(Codes)), !,
     string_to_atom(Codes,Atom).
 
-is_empty([]).
+read_atom(_).
 
 read_number(Number):-
     current_input(Input),
     read_line_to_codes(Input,Codes),
-    not(is_empty(Codes)),
+    not(is_empty(Codes)), !,
     number_codes(Number,Codes).
+
+read_number(_).
 
 sortbooks():-
     repeat,
@@ -223,26 +227,26 @@ exc_order(52):- sortb(52), !.
 exc_order(48):- !.
 
 sortb(49):-
-    findall([Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN], book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN), List),
+    findall([Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN, Genre], book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN, Genre), List),
     predsort(nthcompare(2), List, SortedList),
 
     print_books(SortedList).
 
 sortb(50):-
-    findall([Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN], book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN), List),
+    findall([Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN, Genre], book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN, Genre), List),
     predsort(nthcompare(3), List, SortedList),
 
     print_books(SortedList).
 
 sortb(51):-
-    findall([Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN], book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN), List),
+    findall([Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN, Genre], book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN, Genre), List),
     process_swapdates(List, SwapedList),
     predsort(nthcompare(5), SwapedList, SortedSwapedList),
     process_swapdates(SortedSwapedList, SortedList),
     print_books(SortedList).
 
 sortb(52):-
-    findall([Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN], book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN), List),
+    findall([Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN, Genre], book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN, Genre), List),
     predsort(nthcompare(7), List, SortedList),
 
     print_books(SortedList).
@@ -262,3 +266,31 @@ process_swapdates([],[]).
 process_swapdates([H|T], [S|Out]):-
     swapdates(H, S),
     process_swapdates(T, Out).
+
+get_list_of_genres([],[]).
+get_list_of_genres([H|T], [G|T1]):-
+    nth0(8, H, G),
+    get_list_of_genres(T, T1).
+
+get_set([],[]).
+
+get_set([H|T], T1):-
+    member(H, T), !,
+    get_set(T, T1).
+
+get_set([H|T], [H|T1]):-
+    get_set(T, T1).
+
+print_by_genres([H|T]):-
+    write(H),
+    writeln(':'),
+    writeln('-------------'),
+    findall([Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN, H], book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN, H), List),
+    print_books(List),
+    print_by_genres(T).
+
+group_by_genre():-
+    findall([Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN, Genre], book(Id, Name, Author, Publisher, PublishDate, KeyWords, Pages, ISBN, Genre), List),
+    get_list_of_genres(List, Genres),
+    get_set(Genres, S),
+    print_by_genres(S).

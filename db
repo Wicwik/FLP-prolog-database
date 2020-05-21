@@ -1,4 +1,4 @@
-book(1,'Ako sa kosi zito','Jan Mrkva','AgriBooks','10-11',['Kosenie','Zito'],1230,'ISBN 123456789-0').
-book(2,'Ako sa kosi zito2','Jan Mrkva2','AgriBooks','11-11',['Kosenie','Zito'],1231,'ISBN 123456789-1').
-book(3,'Ako sa kosi zito3','Jan Mrkva','AgriBooks','10-12',['Kosenie','Zito'],1030,'ISBN 123456789-3').
-book(4,'Takto sa kosi trava','Andrej Palica','AgriBooks','10-08',['Kosenie','Trava'],130,'ISBN 123456789-4').
+book(1,'Ako sa kosi zito','Jan Mrkva','AgriBooks','10-11',['Kosenie','Zito'],1230,'ISBN 123456789-0', 'Naucne').
+book(2,'Ako sa kosi zito2','Jan Mrkva2','AgriBooks','11-11',['Kosenie','Zito'],1231,'ISBN 123456789-1', 'Naucne').
+book(3,'Ako sa kosi zito3','Jan Mrkva','AgriBooks','10-12',['Kosenie','Zito'],1030,'ISBN 123456789-3', 'Naucne').
+book(4,'Takto sa kosi trava','Andrej Palica','AgriBooks','10-08',['Kosenie','Trava'],130,'ISBN 123456789-4', 'NeNaucne').
